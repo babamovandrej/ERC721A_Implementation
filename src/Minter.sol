@@ -1,86 +1,144 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.18;
 
 import { ERC721A } from "ERC721A/ERC721A.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
+import { Ownable } from "@openzeppelin/access/Ownable.sol";
+import { Strings } from "@openzeppelin/utils/Strings.sol";
+import { ReentrancyGuard } from "@openzeppelin/security/ReentrancyGuard.sol";
 
-contract Minter is ERC721A, Ownable {
-    //Imports for Strings.sol and SafeMath.sol
+contract Minter is ERC721A, Ownable, ReentrancyGuard {
+    /*//////////////////////////////////////////////////////////////
+                                 Errors
+    //////////////////////////////////////////////////////////////*/
+
+    error InvalidQuantity();
+
+    error ExceededMaxSupply();
+
+    error InsufficientETH();
+
+    error LimitPerAddressReached();
+
+    error CallerIsNotEOA();
+
+    error NonExistentToken();
+
+    /*//////////////////////////////////////////////////////////////
+                                Library imports
+    //////////////////////////////////////////////////////////////*/
+
     using Strings for uint256;
-    using SafeMath for uint256;
 
-    //Setting the total supply and max mint per transaction
-    uint256 public constant max_supply = 10000;
-    uint256 public constant max_per_mint = 10;
+    /*//////////////////////////////////////////////////////////////
+                                 State vars
+    //////////////////////////////////////////////////////////////*/
 
-    //Setting price of ERC721 token 
-    uint256 public price = 0 ether;
-    bool public revealed = false;
-    bool public sale_started = false;
-    string  public tokenURIBase;
-    string  public URIExtension;
+    uint256 internal maxSupply = 10000;
 
-    constructor(
-        string memory baseURI,
-        string memory Extension
-    ) ERC721A("NFT_Mint", "MINT") {
-       tokenURIBase = baseURI;
-       URIExtension = Extension;
+    uint256 internal tokenPrice = 0 ether;
+
+    bool public mintStarted = false;
+
+    bool public isRevealed = false;
+
+    string internal tokenURIBase = "";
+
+    string internal preRevealURI = "";
+
+    string internal URIExtension = "";
+
+    mapping(address => uint256) internal mintedPerAddress;
+
+    /*//////////////////////////////////////////////////////////////
+                                 Modifiers
+    //////////////////////////////////////////////////////////////*/
+
+
+    modifier onlyEOA() {
+        if (tx.origin != msg.sender) revert CallerIsNotEOA();
+        _;
     }
 
-    function togglePublicSaleStarted() external onlyOwner {
-        sale_started = !sale_started;
+    /*//////////////////////////////////////////////////////////////
+                                 Constructor
+    //////////////////////////////////////////////////////////////*/
+
+
+    constructor(string memory baseURI, string memory _extension) ERC721A("Minter", "Minter") {
+        tokenURIBase = baseURI;
+        URIExtension = _extension;
     }
+
+    // MANAGEMENT FUNCTIONS
+
+    function toggleMint() external onlyOwner {
+        mintStarted = !mintStarted;
+    }
+
+    function toggleReveal() external onlyOwner {
+        isRevealed = !isRevealed;
+    }
+
+    function _startTokenId() internal view virtual override returns (uint256) {
+        return 1;
+    }
+
+    // BASEURI FUNCTIONS
 
     function setBaseURI(string memory _newBaseURI) external onlyOwner {
         tokenURIBase = _newBaseURI;
     }
 
-    function reveal() external onlyOwner {
-        revealed = !revealed;
+    function setURIExtenstion(string memory _newURIExtension) external onlyOwner {
+        URIExtension = _newURIExtension;
     }
 
     function _baseURI() internal view override returns (string memory) {
         return tokenURIBase;
     }
 
-    function tokenURI(uint _tokenId) public view virtual override returns (string memory){
-    require(
-      _exists(_tokenId),
-      "ERC721Metadata: URI query for nonexistent token"
-    );
-    return string(abi.encodePacked(tokenURIBase, _tokenId.toString(), URIExtension));
+    function setPreRevealURI(string memory _newURIPreReveal) external onlyOwner {
+        preRevealURI = _newURIPreReveal;
     }
 
-    function mint(uint256 amount) external payable {
-        require(price * amount == msg.value, "Insufficient ETH for transaction");
-        require(sale_started, "Public sale has not active");
-        require(amount <= max_per_mint, "Amount exceeds limit");
-        require(totalSupply() + amount <= max_supply, "Out of tokens");
-        require(amount > 0, "At least one token has to be minted");
-
-
-        _safeMint(_msgSender(), amount);
+    function tokenURI(uint _tokenId) public view virtual override returns (string memory) {
+        if (!_exists(_tokenId)) revert NonExistentToken();
+        if (isRevealed == true) {
+            return string(abi.encodePacked(tokenURIBase, _tokenId.toString(), URIExtension));
+        } else {
+            return string(abi.encodePacked(preRevealURI, _tokenId.toString(), URIExtension));
+        }
+        
     }
 
+    // MINTING FUNCTIONS
 
-    function ownerMint(address to, uint256 tokens) external onlyOwner {
-        require(totalSupply() + tokens <= max_supply, "DASK: Minting would exceed max supply");
-        require(tokens > 0, "DASK: Must mint at least one token");
+    function mint(uint256 quantity) external payable {
+        if (quantity == 0 && quantity <= 10) revert InvalidQuantity();
+        if (quantity + totalSupply() > maxSupply) revert ExceededMaxSupply();
+        if (mintedPerAddress[msg.sender] > 10) revert LimitPerAddressReached();
+        if (msg.value < tokenPrice * quantity) revert InsufficientETH();
 
-        _safeMint(to, tokens);
+        mintedPerAddress[msg.sender] += quantity;
+
+        _safeMint(msg.sender, quantity);
     }
 
-      function _startTokenId() internal view virtual override returns (uint256) {
-        return 1;
+    function ownerMint(address to, uint256 quantity) external onlyOwner {
+        if (quantity == 0) revert InvalidQuantity();
+        if (quantity + totalSupply() > maxSupply) revert ExceededMaxSupply();
+
+        _safeMint(to, quantity);
     }
 
-    function _widthdraw(address _address, uint256 _amount) public onlyOwner {
-        (bool success, ) = _address.call{value: _amount}("");
+    // WITHDRAW FUNCTION
+
+
+    function widthdrawFunds(address _address, uint256 _amount) public onlyOwner nonReentrant{
+        (bool success, ) = _address.call{ value: _amount }("");
         require(success, "Failed attempt to withdraw funds");
     }
+
 
 }

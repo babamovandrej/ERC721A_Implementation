@@ -2,12 +2,12 @@
 pragma solidity >=0.8.18;
 
 import { Script } from "forge-std/Script.sol";
-import { Foo } from "../src/Foo.sol";
+import { Minter } from "../src/Minter.sol";
 
 /// @dev See the Solidity Scripting tutorial: https://book.getfoundry.sh/tutorials/solidity-scripting
 contract DeployFoo is Script {
     address internal deployer;
-    Foo internal foo;
+    Minter internal minter;
 
     function setUp() public virtual {
         string memory mnemonic = vm.envString("MNEMONIC");
@@ -16,7 +16,7 @@ contract DeployFoo is Script {
 
     function run() public {
         vm.startBroadcast(deployer);
-        foo = new Foo();
+        minter = new Minter("ifps://",".json");
         vm.stopBroadcast();
     }
 }
