@@ -54,7 +54,6 @@ contract Minter is ERC721A, Ownable, ReentrancyGuard {
                                  Modifiers
     //////////////////////////////////////////////////////////////*/
 
-
     modifier onlyEOA() {
         if (tx.origin != msg.sender) revert CallerIsNotEOA();
         _;
@@ -63,7 +62,6 @@ contract Minter is ERC721A, Ownable, ReentrancyGuard {
     /*//////////////////////////////////////////////////////////////
                                  Constructor
     //////////////////////////////////////////////////////////////*/
-
 
     constructor(string memory baseURI, string memory _extension) ERC721A("Minter", "Minter") {
         tokenURIBase = baseURI;
@@ -102,14 +100,13 @@ contract Minter is ERC721A, Ownable, ReentrancyGuard {
         preRevealURI = _newURIPreReveal;
     }
 
-    function tokenURI(uint _tokenId) public view virtual override returns (string memory) {
+    function tokenURI(uint256 _tokenId) public view virtual override returns (string memory) {
         if (!_exists(_tokenId)) revert NonExistentToken();
         if (isRevealed == true) {
             return string(abi.encodePacked(tokenURIBase, _tokenId.toString(), URIExtension));
         } else {
             return string(abi.encodePacked(preRevealURI, _tokenId.toString(), URIExtension));
         }
-        
     }
 
     // MINTING FUNCTIONS
@@ -134,11 +131,8 @@ contract Minter is ERC721A, Ownable, ReentrancyGuard {
 
     // WITHDRAW FUNCTION
 
-
-    function widthdrawFunds(address _address, uint256 _amount) public onlyOwner nonReentrant{
+    function widthdrawFunds(address _address, uint256 _amount) public onlyOwner nonReentrant {
         (bool success, ) = _address.call{ value: _amount }("");
         require(success, "Failed attempt to withdraw funds");
     }
-
-
 }

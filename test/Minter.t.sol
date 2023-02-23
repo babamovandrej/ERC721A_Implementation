@@ -6,7 +6,7 @@ import { console2 } from "../lib/forge-std/src/console2.sol";
 import { StdCheats } from "../lib/forge-std/src/StdCheats.sol";
 import { Minter } from "../src/Minter.sol";
 
-contract RentalTest is PRBTest, StdCheats {
+contract MinterTest is PRBTest, StdCheats {
     Minter public minter;
     address public owner;
     uint256 public ownerPkey;
@@ -99,13 +99,12 @@ contract RentalTest is PRBTest, StdCheats {
         assertEq(minter.tokenURI(10), "ipfs://minter/10.json");
     }
 
-
     function testMintScenarioShouldBeSuccessful() public {
         vm.prank(owner);
         minter.toggleMint();
 
         address[] memory users = new address[](10000);
-        for (uint256 i = 0; i < 10000; i++) {
+        for (uint256 i = 0; i < 10_000; i++) {
             bytes memory byteIndex = abi.encodePacked(i);
             string memory addressLabel = string.concat("wallet", string(byteIndex));
 
@@ -114,7 +113,7 @@ contract RentalTest is PRBTest, StdCheats {
             users[i] = user;
         }
 
-        for (uint256 i = 0; i < 10000; i++) {
+        for (uint256 i = 0; i < 10_000; i++) {
             vm.prank(users[i], users[i]);
             minter.mint(1);
             assertEq(minter.balanceOf(users[i]), 1);
