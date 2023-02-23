@@ -14,7 +14,3 @@
   branch = "v0"
   path = "lib/erc721a"
   url = "https://github.com/chiru-labs/ERC721A"
-[submodule "lib/ERC721A"]
-	path = lib/ERC721A
-	url = https://github.com/chiru-labs/ERC721A
-	branch = v4.2.3
