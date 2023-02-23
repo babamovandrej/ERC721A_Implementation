@@ -10,3 +10,7 @@
   branch = "v0"
   path = "lib/prb-test"
   url = "https://github.com/PaulRBerg/prb-test"
+[submodule "lib/erc721a"]
+  branch = "v0"
+  path = "lib/erc721a"
+  url = "https://github.com/chiru-labs/ERC721A"
