@@ -34,7 +34,7 @@ contract Minter is ERC721A, Ownable, ReentrancyGuard {
                                  State vars
     //////////////////////////////////////////////////////////////*/
 
-    uint256 internal maxSupply = 10000;
+    uint256 internal maxSupply = 10_000;
 
     uint256 internal tokenPrice = 0 ether;
 
@@ -48,7 +48,7 @@ contract Minter is ERC721A, Ownable, ReentrancyGuard {
 
     string internal URIExtension = "";
 
-    mapping(address => uint256) internal mintedPerAddress;
+    mapping(address => uint256) public mintedPerAddress;
 
     /*//////////////////////////////////////////////////////////////
                                  Modifiers
@@ -132,7 +132,7 @@ contract Minter is ERC721A, Ownable, ReentrancyGuard {
     // WITHDRAW FUNCTION
 
     function widthdrawFunds(address _address, uint256 _amount) public onlyOwner nonReentrant {
-        (bool success, ) = _address.call{ value: _amount }("");
+        (bool success,) = _address.call{ value: _amount }("");
         require(success, "Failed attempt to withdraw funds");
     }
 }

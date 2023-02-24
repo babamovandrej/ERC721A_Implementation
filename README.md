@@ -1,4 +1,4 @@
-# Foundry Template [![Open in Gitpod][gitpod-badge]][gitpod] [![Github Actions][gha-badge]][gha] [![Foundry][foundry-badge]][foundry] [![License: MIT][license-badge]][license]
+# ERC721A Implementation Using Foundry Template [![Open in Gitpod][gitpod-badge]][gitpod] [![Github Actions][gha-badge]][gha] [![Foundry][foundry-badge]][foundry] [![License: MIT][license-badge]][license]
 
 [gitpod]: https://gitpod.io/#https://github.com/babamovandrej/ERC721A_Implementation
 [gitpod-badge]: https://img.shields.io/badge/Gitpod-Open%20in%20Gitpod-FFB45B?logo=gitpod
@@ -190,13 +190,7 @@ $ forge test
 2. You don't have to create a `.env` file, but filling in the environment variables may be useful when debugging and
    testing against a mainnet fork.
 
-## Related Efforts
-
-- [abigger87/femplate](https://github.com/abigger87/femplate)
-- [cleanunicorn/ethereum-smartcontract-template](https://github.com/cleanunicorn/ethereum-smartcontract-template)
-- [foundry-rs/forge-template](https://github.com/foundry-rs/forge-template)
-- [FrankieIsLost/forge-template](https://github.com/FrankieIsLost/forge-template)
 
 ## License
 
-[MIT](./LICENSE.md) © Paul Razvan Berg
+[MIT](./LICENSE.md) © Andrej Babamov
